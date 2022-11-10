@@ -6,26 +6,28 @@ import {
   IsUUID,
 } from 'class-validator';
 import { randomUUID } from 'crypto';
-export class UserDto {
+export class PostUserDto {
   @IsOptional()
   @IsUUID()
   uuid?: string;
 
   @IsNotEmpty()
   @IsString()
-  nombre: string;
+  name: string;
 
   @IsOptional()
-  apellido?: string;
+  @IsString()
+  lastName?: string;
 
   @IsNotEmpty()
   @IsEmail()
+  @IsString()
   email: string;
 
-  constructor(data?: UserDto) {
+  constructor(data?: PostUserDto) {
     this.uuid = data?.uuid ?? randomUUID();
-    this.nombre = data?.nombre ?? '';
-    if (data?.apellido) this.apellido = data.apellido;
+    this.name = data?.name ?? '';
+    if (data?.lastName) this.lastName = data.lastName;
     this.email = data?.email ?? '';
   }
 }

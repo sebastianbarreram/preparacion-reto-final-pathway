@@ -7,10 +7,16 @@ import {
   Patch,
   Post,
   Put,
+  UseGuards,
+  UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
-import { UserDto } from '../dto/user.dto';
+import { PostUserDto } from '../dtos/post-user.dto';
 import { UsersService } from '../service/users.service';
+import { GetUserDto } from '../dtos/get-user.dto';
+import { PatchUserDto } from '../dtos/patch-user.dto';
+import { AuthGuard } from '../auth.guard';
+import { ResponseInterceptor } from '../response.interceptor';
 
 @Controller('users')
 export class UsersController {
@@ -22,16 +28,20 @@ export class UsersController {
   }
 
   @Get('user')
-  getAllUsers(): UserDto[] {
+  @UseInterceptors(ResponseInterceptor)
+  getAllUsers(): GetUserDto[] {
     return this.usersService.getUsers();
   }
 
   @Get('user/:uuid')
-  getUserByUuid(@Param('uuid') uuid: string): UserDto | undefined {
+  @UseInterceptors(ResponseInterceptor)
+  getUserByUuid(@Param('uuid') uuid: string): GetUserDto {
     return this.usersService.getUserByUuid(uuid);
   }
 
   @Post('user')
+  @UseInterceptors(ResponseInterceptor)
+  @UseGuards(AuthGuard)
   createUser(
     @Body(
       new ValidationPipe({
@@ -40,22 +50,40 @@ export class UsersController {
         forbidNonWhitelisted: true,
       }),
     )
-    newUser: UserDto,
-  ): UserDto {
+    newUser: PostUserDto,
+  ): GetUserDto {
     return this.usersService.createUser(newUser);
   }
 
   @Put('user/:uuid')
-  updateUser(@Param('uuid') uuid: string, @Body() userUpdate: UserDto) {
+  @UseGuards(AuthGuard)
+  @UseInterceptors(ResponseInterceptor)
+  updateUser(
+    @Param('uuid') uuid: string,
+    @Body() userUpdate: PostUserDto,
+  ): GetUserDto {
     return this.usersService.updateUser(uuid, userUpdate);
   }
 
   @Patch('user/:uuid')
-  updatePatchUser(@Param('uuid') uuid: string, @Body() userUpdate: UserDto) {
+  @UseGuards(AuthGuard)
+  @UseInterceptors(ResponseInterceptor)
+  updatePatchUser(
+    @Param('uuid') uuid: string,
+    @Body(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    )
+    userUpdate: PatchUserDto,
+  ): GetUserDto {
     return this.usersService.updatePatchUser(uuid, userUpdate);
   }
 
   @Delete('user/:uuid')
+  @UseGuards(AuthGuard)
   deleteUser(@Param('uuid') uuid: string): boolean {
     return this.usersService.deleteUser(uuid);
   }
